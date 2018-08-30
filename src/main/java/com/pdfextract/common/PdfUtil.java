@@ -11,7 +11,7 @@ public class PdfUtil {
 
 	public static void extractPDF(PDDocument document, Layout layout, TextStripper stripper)
 			throws IOException {
-		System.out.println("***" + layout.getStripperStrategy());
+		System.out.println("***" + layout.getExtractStrategyDetails().getExtractStrategy());
 		stripper.setLayout(layout);
 
 		stripper.setSortByPosition(true);

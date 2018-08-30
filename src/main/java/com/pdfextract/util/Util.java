@@ -1,7 +1,10 @@
 package com.pdfextract.util;
 
 import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +26,20 @@ import lombok.val;
 
 public class Util {
 
+	public static String extractCsvFromPdfExtract(InputStream in, List<String> tables, String layoutStr) {
+		// Layout layout = ExtractSections.loadYaml("ccl_layout.yaml");
+		try (PDDocument pdfDocument = PDDocument.load(in)) {
+			return extractCsvFromPdfExtract(pdfDocument, tables, layoutStr);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "";
+	}
+
 	public static String extractCsvFromPdfExtract(PDDocument pdfDocument, List<String> tables, String layoutStr) {
 		// Layout layout = ExtractSections.loadYaml("ccl_layout.yaml");
 		try (StringWriter sw = new StringWriter();
@@ -38,7 +55,21 @@ public class Util {
 
 	}
 
-	public static String extractColumnData(PDDocument pdfDocument, List<String> tables, String layoutStr) {
+	public static String extractJsonFromPdfExtract(InputStream in, List<String> tables, String layoutStr) {
+		// Layout layout = ExtractSections.loadYaml("ccl_layout.yaml");
+		try (PDDocument pdfDocument = PDDocument.load(in)) {
+			return extractJsonFromPdfExtract(pdfDocument, tables, layoutStr);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return "";
+	}
+
+	public static String extractJsonFromPdfExtract(PDDocument pdfDocument, List<String> tables, String layoutStr) {
 		JSONArray arr = new JSONArray();
 		JSONObject root = new JSONObject();
 		arr.add(root);
@@ -59,7 +90,8 @@ public class Util {
 		try {
 			ObjectMapper m = new ObjectMapper();
 			Layout layout = m.readValue(layoutStr, Layout.class);
-			ExtractStrategy extractSections = (ExtractStrategy) Class.forName(layout.getStripperStrategy()).newInstance();
+			ExtractStrategy extractSections = (ExtractStrategy) Class
+					.forName(layout.getExtractStrategyDetails().getExtractStrategy()).newInstance();
 
 			val arrItem = new ArrayList<String>();
 
@@ -80,7 +112,7 @@ public class Util {
 				for (int j = 0; j < row.length; j++) {
 					Section s = sections[j];
 					if (!s.getIsTabular()) {
-						if(row[j] != null){
+						if (row[j] != null) {
 							arrItem1.add(row[j].replace("\n", " ").replace("\r", " "));
 						} else {
 							arrItem1.add(" ");
@@ -98,7 +130,8 @@ public class Util {
 				}
 				csvPrinter.printRecord(arrItem1);
 			}
-		} catch (IOException | ParseException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+		} catch (IOException | ParseException | InstantiationException | IllegalAccessException
+				| ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -109,7 +142,8 @@ public class Util {
 		try {
 			ObjectMapper m = new ObjectMapper();
 			Layout layout = m.readValue(layoutStr, Layout.class);
-			ExtractStrategy extractSections = (ExtractStrategy) Class.forName(layout.getStripperStrategy()).newInstance();
+			ExtractStrategy extractSections = (ExtractStrategy) Class
+					.forName(layout.getExtractStrategyDetails().getExtractStrategy()).newInstance();
 
 			JSONArray data = new JSONArray();
 
@@ -161,7 +195,8 @@ public class Util {
 			}
 
 			return data;
-		} catch (IOException | ParseException | InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+		} catch (IOException | ParseException | InstantiationException | IllegalAccessException
+				| ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

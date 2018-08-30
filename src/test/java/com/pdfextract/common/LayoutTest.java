@@ -19,5 +19,4 @@ public class LayoutTest {
 		Layout l = m.readValue(is, Layout.class);
 		System.out.println(l);
 	}
-
 }

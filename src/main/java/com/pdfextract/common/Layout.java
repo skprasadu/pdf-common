@@ -12,5 +12,5 @@ public class Layout {
 	private Integer startY;
 	private Integer endY;
 	private Double tableGap;
-	private String stripperStrategy;
+	private ExtractStrategyDetails extractStrategyDetails;
 }
