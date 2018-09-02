@@ -13,4 +13,5 @@ public class Layout {
 	private Integer endY;
 	private Double tableGap;
 	private ExtractStrategyDetails extractStrategyDetails;
+	private String[] headers;
 }

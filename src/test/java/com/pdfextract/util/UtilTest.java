@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class UtilTest {
 
 	@Test
-	public void testExtractJsonFromPdfExtract() throws IOException {
+	public void testExtract() throws IOException {
 		//fail("Not yet implemented");
 		InputStream in = UtilTest.class.getResourceAsStream("/sample.pdf");
 		InputStream in1 = UtilTest.class.getResourceAsStream("/layout.json");
@@ -24,5 +24,29 @@ public class UtilTest {
 		
 		ObjectMapper m = new ObjectMapper();
 		JSONArray arr = m.readValue(st, JSONArray.class);
+	}
+	
+	@Test
+	public void testExtractCsvFromPdfExtract() throws IOException {
+		//fail("Not yet implemented");
+		InputStream in = UtilTest.class.getResourceAsStream("/CCL1.pdf");
+		InputStream in1 = UtilTest.class.getResourceAsStream("/ccl-layout.json");
+		
+		List<String> tables = new ArrayList<String>();
+		String st = Util.extractCsvFromPdfExtract(in, tables, IOUtils.toString(in1));
+		
+		System.out.println(st);
+	}
+
+	@Test
+	public void testExtractJsonFromPdfExtract() throws IOException {
+		//fail("Not yet implemented");
+		InputStream in = UtilTest.class.getResourceAsStream("/CCL1.pdf");
+		InputStream in1 = UtilTest.class.getResourceAsStream("/ccl-layout.json");
+		
+		List<String> tables = new ArrayList<String>();
+		String st = Util.extractJsonFromPdfExtract(in, tables, IOUtils.toString(in1));
+		
+		System.out.println(st);
 	}
 }

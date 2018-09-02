@@ -1,13 +1,15 @@
 package com.pdfextract.util;
 
 import java.io.BufferedWriter;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -21,13 +23,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pdfextract.common.ExtractStrategy;
 import com.pdfextract.common.Layout;
 import com.pdfextract.common.Section;
+import com.pdfextract.common.regex.RegexCommonUtil;
 
 import lombok.val;
 
 public class Util {
 
 	public static String extractCsvFromPdfExtract(InputStream in, List<String> tables, String layoutStr) {
-		// Layout layout = ExtractSections.loadYaml("ccl_layout.yaml");
 		try (PDDocument pdfDocument = PDDocument.load(in)) {
 			return extractCsvFromPdfExtract(pdfDocument, tables, layoutStr);
 		} catch (FileNotFoundException e) {
@@ -41,7 +43,6 @@ public class Util {
 	}
 
 	public static String extractCsvFromPdfExtract(PDDocument pdfDocument, List<String> tables, String layoutStr) {
-		// Layout layout = ExtractSections.loadYaml("ccl_layout.yaml");
 		try (StringWriter sw = new StringWriter();
 				BufferedWriter writer = new BufferedWriter(sw);
 				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT);) {
@@ -56,7 +57,6 @@ public class Util {
 	}
 
 	public static String extractJsonFromPdfExtract(InputStream in, List<String> tables, String layoutStr) {
-		// Layout layout = ExtractSections.loadYaml("ccl_layout.yaml");
 		try (PDDocument pdfDocument = PDDocument.load(in)) {
 			return extractJsonFromPdfExtract(pdfDocument, tables, layoutStr);
 		} catch (FileNotFoundException e) {
@@ -88,50 +88,41 @@ public class Util {
 	private static String csvData(PDDocument pdfDocument, List<String> tables, String layoutStr,
 			CSVPrinter csvPrinter) {
 		try {
-			ObjectMapper m = new ObjectMapper();
-			Layout layout = m.readValue(layoutStr, Layout.class);
-			ExtractStrategy extractSections = (ExtractStrategy) Class
-					.forName(layout.getExtractStrategyDetails().getExtractStrategy()).newInstance();
+			val m = new ObjectMapper();
+			val layout = m.readValue(layoutStr, Layout.class);
 
 			val arrItem = new ArrayList<String>();
 
-			val sections = layout.getSections();
+			List sections = getHeaders(layout);
 
-			for (Section columnHeader : sections) {
-				arrItem.add(columnHeader.getName());
+			for (Object columnHeader : sections) {
+				arrItem.add((String) columnHeader);
 			}
 
 			csvPrinter.printRecord(arrItem);
 
-			val ss = extractSections.extractData(pdfDocument, layout);
-			System.out.println("ss.size()=" + ss.size() + "tables.size()=" + tables.size());
+			// get the data before RegEx
+			val ss1 = extractData(pdfDocument, tables, layout);
+
+			// Apply RegEx IF ANY
+			val ss = RegexCommonUtil.applyRegex(ss1, 0, layout);
+
+			System.out.println("csvData ss.size()=" + ss.size() + "tables.size()=" + tables.size());
 
 			for (int i = 0; i < ss.size(); i++) {
 				val arrItem1 = new ArrayList<String>();
 				String[] row = ss.get(i);
 				for (int j = 0; j < row.length; j++) {
-					Section s = sections[j];
-					if (!s.getIsTabular()) {
-						if (row[j] != null) {
-							arrItem1.add(row[j].replace("\n", " ").replace("\r", " "));
-						} else {
-							arrItem1.add(" ");
-						}
+					if (row[j] != null && !row[j].trim().equals("")) {
+						arrItem1.add(row[j].replace("\n", " ").replace("\r", " "));
 					} else {
-						if (i < tables.size()) {
-							JSONParser parser = new JSONParser();
-							JSONObject item1 = (JSONObject) parser.parse(tables.get(i) + "}");
-
-							arrItem1.add(getJsonDataString((JSONArray) item1.get("data")));
-						} else {
-							arrItem1.add("data");
-						}
+						arrItem1.add("no data");
 					}
 				}
 				csvPrinter.printRecord(arrItem1);
 			}
-		} catch (IOException | ParseException | InstantiationException | IllegalAccessException
-				| ClassNotFoundException e) {
+		} catch (IOException | InstantiationException | IllegalAccessException | ClassNotFoundException
+				| ParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -140,56 +131,47 @@ public class Util {
 
 	private static JSONArray jsonData(PDDocument pdfDocument, List<String> tables, String layoutStr) {
 		try {
-			ObjectMapper m = new ObjectMapper();
-			Layout layout = m.readValue(layoutStr, Layout.class);
-			ExtractStrategy extractSections = (ExtractStrategy) Class
-					.forName(layout.getExtractStrategyDetails().getExtractStrategy()).newInstance();
+			val m = new ObjectMapper();
+			val layout = m.readValue(layoutStr, Layout.class);
 
-			JSONArray data = new JSONArray();
+			val data = new JSONArray();
 
-			JSONArray arrItem = new JSONArray();
+			val arrItem = new JSONArray();
 
-			Section[] sections = layout.getSections();
+			List sections = getHeaders(layout);
 
-			for (Section columnHeader : sections) {
+			for (Object columnHeader : sections) {
 				JSONObject header = new JSONObject();
 				header.put("top", "");
 				header.put("left", "");
 				header.put("width", "");
 				header.put("height", "");
-				header.put("text", columnHeader.getName());
+				header.put("text", columnHeader);
 				arrItem.add(header);
 			}
 
 			data.add(arrItem);
 
-			List<String[]> ss = extractSections.extractData(pdfDocument, layout);
-			System.out.println("ss.size()=" + ss.size() + "tables.size()=" + tables.size());
+			val ss1 = extractData(pdfDocument, tables, layout);
+			val ss = RegexCommonUtil.applyRegex(ss1, 0, layout);
+			System.out.println("jsonData ss.size()=" + ss.size() + "tables.size()=" + tables.size());
 
 			for (int i = 0; i < ss.size(); i++) {
 				JSONArray arrItem1 = new JSONArray();
 				String[] row = ss.get(i);
 				for (int j = 0; j < row.length; j++) {
-					Section s = sections[j];
 					JSONObject item = new JSONObject();
 					item.put("top", "");
 					item.put("left", "");
 					item.put("width", "");
 					item.put("height", "");
-					item.put("text", row[j]);
-					if (!s.getIsTabular()) {
-						arrItem1.add(item);
+					if (row[j] != null && !row[j].trim().equals("")) {
+						item.put("text", row[j].replace("\n", " ").replace("\r", " "));
 					} else {
-						if (i < tables.size()) {
-							JSONParser parser = new JSONParser();
-							JSONObject item1 = (JSONObject) parser.parse(tables.get(i) + "}");
-
-							item.put("text", getJsonDataString((JSONArray) item1.get("data")));
-						} else {
-							item.put("text", "data");
-						}
-						arrItem1.add(item);
+						item.put("text", "no data");
 					}
+
+					arrItem1.add(item);
 				}
 				data.add(arrItem1);
 			}
@@ -201,6 +183,52 @@ public class Util {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	private static List getHeaders(Layout layout) {
+		// TODO Auto-generated method stub
+		if (layout.getHeaders() != null) {
+			return Arrays.asList(layout.getHeaders());
+		} else {
+			return Arrays.stream(layout.getSections()).map(Section::getName).collect(Collectors.toList());
+		}
+	}
+
+	private static List<String[]> extractData(PDDocument pdfDocument, List<String> tables, Layout layout)
+			throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException, ParseException {
+		val extractSections = (ExtractStrategy) Class.forName(layout.getExtractStrategyDetails().getExtractStrategy())
+				.newInstance();
+		val sections = layout.getSections();
+		val ss = extractSections.extractData(pdfDocument, layout);
+		System.out.println("extractData ss.size()=" + ss.size() + "tables.size()=" + tables.size());
+		List<String[]> list = new LinkedList<String[]>();
+
+		for (int i = 0; i < ss.size(); i++) {
+			String[] row = ss.get(i);
+			val arrItem1 = new String[row.length];
+			for (int j = 0; j < row.length; j++) {
+				Section s = sections[j];
+				if (!s.getIsTabular()) {
+
+					if (row[j] != null) {
+						arrItem1[j] = row[j].replace("\n", " ").replace("\r", " ");
+					} else {
+						arrItem1[j] = " ";
+					}
+				} else {
+					if (i < tables.size()) {
+						JSONParser parser = new JSONParser();
+						JSONObject item1 = (JSONObject) parser.parse(tables.get(i) + "}");
+
+						arrItem1[j] = getJsonDataString((JSONArray) item1.get("data"));
+					} else {
+						arrItem1[j] = "[]";
+					}
+				}
+			}
+			list.add(arrItem1);
+		}
+		return list;
 	}
 
 	private static String getJsonDataString(JSONArray jsonArray) {

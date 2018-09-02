@@ -5,7 +5,7 @@
 	"endY": "723",
 	"tableGap": "17.0",
 	"tableDelimiter": "#####",
-	"extractStrategyDetails": {"extractStrategy":"com.pdfextract.common.sample.SampleExtractorStrategy", "additionalParameters": {"name": "krishna"}},
+	"extractStrategyDetails": {"extractStrategy":"com.pdfextract.common.sample.SampleExtractorStrategy"},
 	"sections":[
 		{"name": "Description"}
 	]
