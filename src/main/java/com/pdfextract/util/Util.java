@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pdfextract.common.ExtractStrategy;
 import com.pdfextract.common.Layout;
 import com.pdfextract.common.Section;
+import com.pdfextract.common.TableDetail;
 import com.pdfextract.common.regex.RegexCommonUtil;
 
 import lombok.val;
@@ -93,7 +94,7 @@ public class Util {
 
 			val arrItem = new ArrayList<String>();
 
-			List sections = getHeaders(layout);
+			List sections = getHeaders(tables, layout);
 
 			for (Object columnHeader : sections) {
 				arrItem.add((String) columnHeader);
@@ -138,7 +139,7 @@ public class Util {
 
 			val arrItem = new JSONArray();
 
-			List sections = getHeaders(layout);
+			List sections = getHeaders(tables, layout);
 
 			for (Object columnHeader : sections) {
 				JSONObject header = new JSONObject();
@@ -185,12 +186,28 @@ public class Util {
 		return null;
 	}
 
-	private static List getHeaders(Layout layout) {
+	private static List getHeaders(List<String> tables, Layout layout) throws ParseException {
 		// TODO Auto-generated method stub
 		if (layout.getHeaders() != null) {
 			return Arrays.asList(layout.getHeaders());
 		} else {
-			return Arrays.stream(layout.getSections()).map(Section::getName).collect(Collectors.toList());
+			List lst = new LinkedList();
+			List tabList = Arrays.stream(layout.getSections()).filter(x -> x.getIsTabular() == true)
+					.collect(Collectors.toList());
+
+			if (tables.size() > 0 && tabList.size() > 0) {
+				TableDetail td = new TableDetail(tables.get(0));
+				List columns = td.getColumns();
+				for (Section s : layout.getSections()) {
+					lst.add(s.getName());
+					if (s.getIsTabular()) {
+						lst.addAll(columns);
+					}
+				}
+				return lst;
+			} else {
+				return Arrays.stream(layout.getSections()).map(Section::getName).collect(Collectors.toList());
+			}
 		}
 	}
 
@@ -201,54 +218,81 @@ public class Util {
 		val sections = layout.getSections();
 		val ss = extractSections.extractData(pdfDocument, layout);
 		System.out.println("extractData ss.size()=" + ss.size() + "tables.size()=" + tables.size());
-		List<String[]> list = new LinkedList<String[]>();
+
+		int count = sections.length;
+
+		if (tables.size() > 0) {
+			count = getCount(tables.get(0), sections);
+		}
+
+		val list = new LinkedList<String[]>();
+		val tabList = new LinkedList<String[]>();
 
 		for (int i = 0; i < ss.size(); i++) {
 			String[] row = ss.get(i);
-			val arrItem1 = new String[row.length];
+			val arrItem1 = new String[count];
+			int index = 0;
 			for (int j = 0; j < row.length; j++) {
 				Section s = sections[j];
-				if (!s.getIsTabular()) {
 
-					if (row[j] != null) {
-						arrItem1[j] = row[j].replace("\n", " ").replace("\r", " ");
-					} else {
-						arrItem1[j] = " ";
-					}
+				if (row[j] != null) {
+					arrItem1[index] = row[j].replace("\n", " ").replace("\r", " ");
 				} else {
+					arrItem1[index] = " ";
+				}
+				if (s.getIsTabular()) {
+					// getJsonDataString(tables, i, arrItem1, j);
 					if (i < tables.size()) {
-						JSONParser parser = new JSONParser();
-						JSONObject item1 = (JSONObject) parser.parse(tables.get(i) + "}");
+						TableDetail td = new TableDetail(tables.get(i));
+						List<String[]> contents = td.getContent();
+						int firstRow = 0;
+						int indexOfTabularData = index + 1;
+						for (String[] row1 : contents) {
 
-						arrItem1[j] = getJsonDataString((JSONArray) item1.get("data"));
-					} else {
-						arrItem1[j] = "[]";
+							if (firstRow == 0) {
+								for (int ii = 0; ii < row1.length; ii++) {
+									arrItem1[indexOfTabularData++] = row1[ii];
+								}
+								indexOfTabularData = index + 1;
+							} else {
+								val arrItem2 = new String[count];
+								for (int ii = 0; ii < row1.length; ii++) {
+									arrItem2[indexOfTabularData++] = row1[ii];
+								}
+								tabList.add(arrItem2);
+								indexOfTabularData = index + 1;
+							}
+							firstRow++;
+						}
+						index += td.getColumns().size();
 					}
 				}
+				index++;
 			}
+
 			list.add(arrItem1);
+			if (tabList.size() > 0) {
+				list.addAll(tabList);
+				tabList.clear();
+			}
 		}
 		return list;
 	}
 
-	private static String getJsonDataString(JSONArray jsonArray) {
-		// TODO Auto-generated method stub
-		JSONArray tempArray = new JSONArray();
-		int i = 0;
-		for (Object obj : jsonArray) {
-			JSONArray jArr = (JSONArray) obj;
-			JSONArray jArr1 = new JSONArray();
+	public static int getCount(String tableData, Section[] sections) throws ParseException {
 
-			if (i > 0) {
-				for (Object obj1 : jArr) {
-					JSONObject jObj1 = (JSONObject) obj1;
-					jArr1.add(jObj1.get("text"));
-				}
-				tempArray.add(jArr1);
+		TableDetail td = new TableDetail(tableData);
+
+		int cnt = td.getColumns().size();
+		int index = 0;
+
+		for (int i = 0; i < sections.length; i++) {
+			if (sections[i].getIsTabular()) {
+				index += cnt;
 			}
-			i++;
+			index++;
 		}
 
-		return tempArray.toJSONString();
+		return index;
 	}
 }
