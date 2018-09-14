@@ -86,7 +86,7 @@ public class Util1 {
 		return arr.toJSONString();
 	}
 
-	private static String csvData(PDDocument pdfDocument, List<String> tables, String layoutStr,
+	private static String csvData(PDDocument pdfDocument, List tables, String layoutStr,
 			CSVPrinter csvPrinter) {
 		try {
 			val m = new ObjectMapper();
@@ -121,9 +121,9 @@ public class Util1 {
 					} else {
 						if (i < tables.size()) {
 							JSONParser parser = new JSONParser();
-							JSONObject item1 = (JSONObject) parser.parse(tables.get(i) + "}");
+							val item1 = (LinkedHashMap) tables.get(i);
 
-							arrItem1.add(getJsonDataString((JSONArray) item1.get("data")));
+							arrItem1.add(getJsonDataString((ArrayList) item1.get("data")));
 						} else {
 							arrItem1.add("data");
 						}
@@ -131,7 +131,7 @@ public class Util1 {
 				}
 				csvPrinter.printRecord(arrItem1);
 			}
-		} catch (IOException | ParseException | InstantiationException | IllegalAccessException
+		} catch (IOException | InstantiationException | IllegalAccessException
 				| ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
