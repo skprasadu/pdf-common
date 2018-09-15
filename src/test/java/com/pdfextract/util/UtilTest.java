@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -65,13 +66,12 @@ public class UtilTest {
 		InputStream in = UtilTest.class.getResourceAsStream("/CCL1.pdf");
 		InputStream in1 = UtilTest.class.getResourceAsStream("/ccl-layout-wo-regex.json");
 		
-		List<String> tables = new ArrayList<String>();
 		InputStream in2 = UtilTest.class.getResourceAsStream("/table1.json");
-		tables.add(IOUtils.toString(in2));
-		in2 = UtilTest.class.getResourceAsStream("/table2.json");
-		tables.add(IOUtils.toString(in2));
+		ObjectMapper m = new ObjectMapper();
+		JSONArray arr = m.readValue(in2, JSONArray.class);
 		
-		String st = Util.extractJsonFromPdfExtract(in, tables, IOUtils.toString(in1));
+		
+		String st = Util.extractJsonFromPdfExtract(in, arr, IOUtils.toString(in1));
 		
 		System.out.println(st);
 	}
@@ -80,15 +80,15 @@ public class UtilTest {
 	public void testTableDetail() throws IOException, ParseException {
 		//fail("Not yet implemented");
 		InputStream in = UtilTest.class.getResourceAsStream("/table1.json");
+		ObjectMapper m = new ObjectMapper();
+		JSONArray arr = m.readValue(in, JSONArray.class);
 
-		TableDetail td = new TableDetail(IOUtils.toString(in) );
+		TableDetail td = new TableDetail((LinkedHashMap)arr.get(0));
 		
 		assertEquals(2, td.getColumns().size());
 		assertEquals(3, td.getContent().size());
 		
-		in = UtilTest.class.getResourceAsStream("/table2.json");
-
-		td = new TableDetail(IOUtils.toString(in) );
+		td = new TableDetail((LinkedHashMap)arr.get(1));
 		
 		assertEquals(2, td.getColumns().size());
 		assertEquals(2, td.getContent().size());

@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -86,8 +87,7 @@ public class Util {
 		return arr.toJSONString();
 	}
 
-	private static String csvData(PDDocument pdfDocument, List<String> tables, String layoutStr,
-			CSVPrinter csvPrinter) {
+	private static String csvData(PDDocument pdfDocument, List tables, String layoutStr, CSVPrinter csvPrinter) {
 		try {
 			val m = new ObjectMapper();
 			val layout = m.readValue(layoutStr, Layout.class);
@@ -103,7 +103,7 @@ public class Util {
 			csvPrinter.printRecord(arrItem);
 
 			// get the data before RegEx
-			val ss1 = extractData(pdfDocument, tables, layout);
+			List<String[]> ss1 = extractData(pdfDocument, tables, layout);
 
 			// Apply RegEx IF ANY
 			val ss = RegexCommonUtil.applyRegex(ss1, 0, layout);
@@ -130,7 +130,7 @@ public class Util {
 		return null;
 	}
 
-	private static JSONArray jsonData(PDDocument pdfDocument, List<String> tables, String layoutStr) {
+	private static JSONArray jsonData(PDDocument pdfDocument, List tables, String layoutStr) {
 		try {
 			val m = new ObjectMapper();
 			val layout = m.readValue(layoutStr, Layout.class);
@@ -153,7 +153,7 @@ public class Util {
 
 			data.add(arrItem);
 
-			val ss1 = extractData(pdfDocument, tables, layout);
+			List<String[]> ss1 = extractData(pdfDocument, tables, layout);
 			val ss = RegexCommonUtil.applyRegex(ss1, 0, layout);
 			System.out.println("jsonData ss.size()=" + ss.size() + "tables.size()=" + tables.size());
 
@@ -186,7 +186,7 @@ public class Util {
 		return null;
 	}
 
-	private static List getHeaders(List<String> tables, Layout layout) throws ParseException {
+	private static List getHeaders(List tables, Layout layout) throws ParseException {
 		// TODO Auto-generated method stub
 		if (layout.getHeaders() != null) {
 			return Arrays.asList(layout.getHeaders());
@@ -196,7 +196,7 @@ public class Util {
 					.collect(Collectors.toList());
 
 			if (tables.size() > 0 && tabList.size() > 0) {
-				TableDetail td = new TableDetail(tables.get(0));
+				TableDetail td = new TableDetail((LinkedHashMap) tables.get(0));
 				List columns = td.getColumns();
 				for (Section s : layout.getSections()) {
 					lst.add(s.getName());
@@ -211,7 +211,7 @@ public class Util {
 		}
 	}
 
-	private static List<String[]> extractData(PDDocument pdfDocument, List<String> tables, Layout layout)
+	private static List<String[]> extractData(PDDocument pdfDocument, List tables, Layout layout)
 			throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException, ParseException {
 		val extractSections = (ExtractStrategy) Class.forName(layout.getExtractStrategyDetails().getExtractStrategy())
 				.newInstance();
@@ -222,7 +222,7 @@ public class Util {
 		int count = sections.length;
 
 		if (tables.size() > 0) {
-			count = getCount(tables.get(0), sections);
+			count = getCount((LinkedHashMap) tables.get(0), sections);
 		}
 
 		val list = new LinkedList<String[]>();
@@ -243,7 +243,7 @@ public class Util {
 				if (s.getIsTabular()) {
 					// getJsonDataString(tables, i, arrItem1, j);
 					if (i < tables.size()) {
-						TableDetail td = new TableDetail(tables.get(i));
+						TableDetail td = new TableDetail((LinkedHashMap) tables.get(i));
 						List<String[]> contents = td.getContent();
 						int firstRow = 0;
 						int indexOfTabularData = index + 1;
@@ -279,7 +279,7 @@ public class Util {
 		return list;
 	}
 
-	public static int getCount(String tableData, Section[] sections) throws ParseException {
+	public static int getCount(LinkedHashMap tableData, Section[] sections) throws ParseException {
 
 		TableDetail td = new TableDetail(tableData);
 
