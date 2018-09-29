@@ -4,6 +4,11 @@ import lombok.Data;
 
 @Data
 public class Layout {
+	private Integer selection_count;
+	private String name;
+	private Integer time;
+	private String id;
+	private Integer page_count;
 	
 	private String tableDelimiter;
 	private Section[] sections;
