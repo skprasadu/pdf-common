@@ -27,12 +27,22 @@
 			<artifactId>pdfbox</artifactId>
 			<version>2.0.11</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.hcl</groupId>
+			<artifactId>pdf-lapdf-extract</artifactId>
+			<version>1.0.4-SNAPSHOT</version>
+		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
 			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>edu.isi.bmkeg</groupId>
+			<artifactId>lapdftext</artifactId>
+			<version>1.7.7-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
