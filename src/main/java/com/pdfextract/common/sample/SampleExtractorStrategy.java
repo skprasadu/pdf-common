@@ -29,14 +29,14 @@ public class SampleExtractorStrategy implements ExtractStrategy {
 	}
 	
 	@Override
-	public List<String[]> extractData(PDDocument document, Layout layout) throws IOException {
+	public List<String[]> extractData(List<String> data, Layout layout) throws IOException {
 		// TODO Auto-generated method stub
-		PdfUtil.extractPDF(document, layout, stripper);
+		PdfUtil.extractPDF(layout, stripper);
 		
 		val list = new ArrayList<String[]>();
-		for(LineDetails l : stripper.getData()){
+		for(String l : data){ //LineDetails l : stripper.getData()
 			String[] dat = new String[1];
-			dat[0] = l.getLine();
+			dat[0] = l; //l.getLine()
 			list.add(dat);
 		}
 		return list;

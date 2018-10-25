@@ -14,6 +14,7 @@
 									"1-startSent":"(?<startSent>[A-Z]{2} applies.*?) [A-Z]{2} Column \\d\\.?",
 									"1-otherPortion":"(?<=[A-Z]{2} Column \\d)(?<otherPortion>.*?)(?=[A-Z]{2} applies)"
 								} ]}}},
+   "layoutExtractorDetails": {"layoutExtractor":"com.pdfextract.common.LapdfExtractStrategy", "additionalParameters": {"layoutRules": "CCL1.drl"}},
    "sections" : [
       {
          "name" : "Description",

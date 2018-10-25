@@ -21,11 +21,11 @@ public class TwoColumnExtractSection implements ExtractStrategy {
 	
 	protected TextStripper stripper;
 
-	public List<String[]> extractData(PDDocument document, Layout layout) throws IOException {
+	public List<String[]> extractData(List<String> data, Layout layout) throws IOException {
 		Section[] sections = layout.getSections();
 
-		PdfUtil.extractPDF(document, layout, this.stripper);
-		List<LineDetails> data = stripper.getData();
+		PdfUtil.extractPDF(layout, this.stripper); //document, first arg
+		//List<LineDetails> data = stripper.getData();
 		/*PDFTextStripper pdfStripper = new PDFTextStripper();
 		String st = pdfStripper.getText(document);
 		String[] data = st.split("\n");*/
@@ -35,7 +35,7 @@ public class TwoColumnExtractSection implements ExtractStrategy {
 
 		short flag = -2;
 
-		for (LineDetails ln : data) {
+		for (String ln : data) { //LineDetails ln
 
 			short locFlag = checkSectionChange(flag, sections, ln);
 			if (locFlag != -1) {
@@ -53,7 +53,7 @@ public class TwoColumnExtractSection implements ExtractStrategy {
 			}
 
 			if (eccnDetail != null) {
-				String line = cleanse(ln.getLine().trim().equals("") ? "\n" : ln.getLine().trim().replaceAll("\"", "\'"));
+				String line = ln; //cleanse(ln.getLine().trim().equals("") ? "\n" : ln.getLine().trim().replaceAll("\"", "\'"));
 
 				for (short i = 1; i <= sections.length; i++) {
 					if (flag == i) {
@@ -72,7 +72,7 @@ public class TwoColumnExtractSection implements ExtractStrategy {
 		return data1;
 	}
 
-	private short checkSectionChange(short flag, Section[] sections, LineDetails ln) {
+	private short checkSectionChange(short flag, Section[] sections, String ln) { //LineDetails ln
 
 		if ((flag == -2 || flag == sections.length || flag == 1) && patternMatch(sections[0].getRegex(), ln)) {
 			return 1;
@@ -92,21 +92,21 @@ public class TwoColumnExtractSection implements ExtractStrategy {
 		return -1;
 	}
 
-	private boolean patternMatch(String pattern, LineDetails ln) {
+	private boolean patternMatch(String pattern, String ln) { //LineDetails ln
 		// TODO Auto-generated method stub
-		String line = ln.getLine().replace("\r", "");
+		//String line = ln.getLine().replace("\r", "");
 		String[] split = pattern.split("#####");
 		if (split.length == 1) {
-			boolean b = Pattern.matches(pattern, line);
+			boolean b = Pattern.matches(pattern, ln); //line
 			return b;
 		} else {
-			boolean a = Pattern.matches(split[0], line);
-			if (ln.getFont() != null) {
-			boolean b = ln.getFont().getName().contains(split[1]);
+			boolean a = Pattern.matches(split[0], ln); //line 
+			//if (ln.getFont() != null) {
+			boolean b = ln.contains(split[1]); //ln.getFont().getName().contains(split[1])
 			return a && b;
-			}
+			//}
 		}
-		return false;
+		//return false; Why is this here?
 	}
 
 	private static String cleanse(String line) {

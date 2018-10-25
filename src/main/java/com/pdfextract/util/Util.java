@@ -21,8 +21,12 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.pdfextract.common.ExtractStrategy;
+import com.pdfextract.common.LapdfExtractStrategy;
 import com.pdfextract.common.Layout;
+import com.pdfextract.common.LayoutExtractor;
+import com.pdfextract.common.LayoutExtractorDetails;
 import com.pdfextract.common.Section;
 import com.pdfextract.common.TableDetail;
 import com.pdfextract.common.regex.RegexCommonUtil;
@@ -31,7 +35,7 @@ import lombok.val;
 
 public class Util {
 
-	public static String extractCsvFromPdfExtract(InputStream in, List<String> tables, String layoutStr) {
+	public static String extractCsvFromPdfExtract(InputStream in, List<String> tables, String layoutStr) throws Exception {
 		try (PDDocument pdfDocument = PDDocument.load(in)) {
 			return extractCsvFromPdfExtract(pdfDocument, tables, layoutStr);
 		} catch (FileNotFoundException e) {
@@ -44,7 +48,7 @@ public class Util {
 		return "";
 	}
 
-	public static String extractCsvFromPdfExtract(PDDocument pdfDocument, List<String> tables, String layoutStr) {
+	public static String extractCsvFromPdfExtract(PDDocument pdfDocument, List<String> tables, String layoutStr) throws Exception {
 		try (StringWriter sw = new StringWriter();
 				BufferedWriter writer = new BufferedWriter(sw);
 				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT);) {
@@ -58,7 +62,7 @@ public class Util {
 
 	}
 
-	public static String extractJsonFromPdfExtract(InputStream in, List<String> tables, String layoutStr) {
+	public static String extractJsonFromPdfExtract(InputStream in, List<String> tables, String layoutStr) throws Exception {
 		try (PDDocument pdfDocument = PDDocument.load(in)) {
 			return extractJsonFromPdfExtract(pdfDocument, tables, layoutStr);
 		} catch (FileNotFoundException e) {
@@ -71,7 +75,7 @@ public class Util {
 		return "";
 	}
 
-	public static String extractJsonFromPdfExtract(PDDocument pdfDocument, List<String> tables, String layoutStr) {
+	public static String extractJsonFromPdfExtract(PDDocument pdfDocument, List<String> tables, String layoutStr) throws Exception {
 		JSONArray arr = new JSONArray();
 		JSONObject root = new JSONObject();
 		arr.add(root);
@@ -84,10 +88,10 @@ public class Util {
 
 		root.put("data", data);
 		root.put("spec_index", "0");
-		return arr.toJSONString();
-	}
+		return arr.toJSONString(); 
+		}
 
-	private static String csvData(PDDocument pdfDocument, List tables, String layoutStr, CSVPrinter csvPrinter) {
+	private static String csvData(PDDocument pdfDocument, List tables, String layoutStr, CSVPrinter csvPrinter) throws Exception {
 		try {
 			val m = new ObjectMapper();
 			val layout = m.readValue(layoutStr, Layout.class);
@@ -113,6 +117,7 @@ public class Util {
 			for (int i = 0; i < ss.size(); i++) {
 				val arrItem1 = new ArrayList<String>();
 				String[] row = ss.get(i);
+				System.out.println("row.length=" + row.length);
 				for (int j = 0; j < row.length; j++) {
 					if (row[j] != null && !row[j].trim().equals("")) {
 						arrItem1.add(row[j].replace("\n", " ").replace("\r", " "));
@@ -122,6 +127,7 @@ public class Util {
 				}
 				csvPrinter.printRecord(arrItem1);
 			}
+			csvPrinter.flush();
 		} catch (IOException | InstantiationException | IllegalAccessException | ClassNotFoundException
 				| ParseException e) {
 			// TODO Auto-generated catch block
@@ -130,7 +136,7 @@ public class Util {
 		return null;
 	}
 
-	private static JSONArray jsonData(PDDocument pdfDocument, List tables, String layoutStr) {
+	private static JSONArray jsonData(PDDocument pdfDocument, List tables, String layoutStr) throws Exception {
 		try {
 			val m = new ObjectMapper();
 			val layout = m.readValue(layoutStr, Layout.class);
@@ -212,11 +218,17 @@ public class Util {
 	}
 
 	private static List<String[]> extractData(PDDocument pdfDocument, List tables, Layout layout)
-			throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException, ParseException {
-		val extractSections = (ExtractStrategy) Class.forName(layout.getExtractStrategyDetails().getExtractStrategy())
+			throws Exception {
+		System.out.println("*************************LOADING CHUNKS FROM DOCUMENT*************************");
+		LayoutExtractor layoutExtractor = new LapdfExtractStrategy();
+		val layoutSections = layoutExtractor.extractData(pdfDocument, layout);
+		layoutSections.forEach(chunk -> {
+			System.out.println(chunk);
+		});
+		val extractionStrategy = (ExtractStrategy) Class.forName(layout.getExtractStrategyDetails().getExtractStrategy())
 				.newInstance();
 		val sections = layout.getSections();
-		val ss = extractSections.extractData(pdfDocument, layout);
+		val ss = extractionStrategy.extractData(layoutSections, layout);
 		System.out.println("extractData ss.size()=" + ss.size() + "tables.size()=" + tables.size());
 
 		int count = sections.length;

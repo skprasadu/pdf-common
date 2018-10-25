@@ -1,0 +1,22 @@
+#created on: Jul 30, 2010
+package edu.isi.bmkeg.pdf.classification.rules
+
+#list any import classes here.
+
+import edu.isi.bmkeg.lapdf.features.ChunkFeatures;
+import edu.isi.bmkeg.lapdf.model.ChunkBlock;
+
+#declare any global variables here
+
+global ChunkBlock    chunk;
+
+rule "body"
+	activation-group "blockClassification"
+	salience 4
+	when	
+			ChunkFeatures(mostPopularFontModifierBold==true)
+		    //ChunkFeatures(pageNumber==1)
+		    eval(chunk.isMatchingRegularExpression("[1][A-Z][0-9][0-9][0-9]")==true)
+	then 
+		chunk.setType(chunk.TYPE_BODY);
+end
