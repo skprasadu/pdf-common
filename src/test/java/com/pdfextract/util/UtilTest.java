@@ -24,7 +24,7 @@ import lombok.val;
 public class UtilTest {
 
 	@Test
-	public void testExtract() throws IOException {
+	public void testExtract() throws Exception {
 		//fail("Not yet implemented");
 		InputStream in = UtilTest.class.getResourceAsStream("/sample.pdf");
 		InputStream in1 = UtilTest.class.getResourceAsStream("/layout.json");
@@ -37,7 +37,7 @@ public class UtilTest {
 	}
 	
 	@Test
-	public void testExtractCsvFromPdfExtract() throws IOException {
+	public void testExtractCsvFromPdfExtract() throws Exception {
 		//fail("Not yet implemented");
 		InputStream in = UtilTest.class.getResourceAsStream("/CCL1.pdf");
 		InputStream in1 = UtilTest.class.getResourceAsStream("/ccl-layout.json");
@@ -49,7 +49,7 @@ public class UtilTest {
 	}
 
 	@Test
-	public void testExtractJsonFromPdfExtract() throws IOException {
+	public void testExtractJsonFromPdfExtract() throws Exception {
 		//fail("Not yet implemented");
 		InputStream in = UtilTest.class.getResourceAsStream("/CCL1.pdf");
 		InputStream in1 = UtilTest.class.getResourceAsStream("/ccl-layout.json");
@@ -61,7 +61,7 @@ public class UtilTest {
 	}
 
 	@Test
-	public void testExtractJsonFromPdfExtractWithColumns() throws IOException {
+	public void testExtractJsonFromPdfExtractWithColumns() throws Exception {
 		//fail("Not yet implemented");
 		InputStream in = UtilTest.class.getResourceAsStream("/CCL1.pdf");
 		InputStream in1 = UtilTest.class.getResourceAsStream("/ccl-layout-wo-regex.json");

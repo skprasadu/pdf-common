@@ -10,20 +10,23 @@ import org.apache.pdfbox.text.PDFTextStripper;
 
 import com.pdfextract.common.ExtractStrategy;
 import com.pdfextract.common.Layout;
+import com.pdfextract.common.PdfUtil;
 import com.pdfextract.common.Section;
 import com.pdfextract.common.TextStripper;
 
 public class SingleColumnExtractSection implements ExtractStrategy {
+	
+	protected TextStripper stripper;
 
-	public List<String[]> extractData(PDDocument document, Layout layout) throws IOException {
+	public List<String[]> extractData(List<String> data, Layout layout) throws IOException {
 		Section[] sections = layout.getSections();
 		// List<LineDetails> data = null;
 
-		// PdfUtil.extractPDF(document, layout, this.stripper);
+		PdfUtil.extractPDF(layout, this.stripper);
 		// data = stripper.getData();
-		PDFTextStripper pdfStripper = new PDFTextStripper();
-		String st = pdfStripper.getText(document);
-		String[] data = st.split("\n");
+		//PDFTextStripper pdfStripper = new PDFTextStripper();
+		//String st = pdfStripper.getText(document);
+		//String[] data = st.split("\n");
 
 		ArrayList<String[]> data1 = new ArrayList<>();
 		String[] eccnDetail = null;

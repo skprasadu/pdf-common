@@ -6,6 +6,7 @@
 	"tableGap": "17.0",
 	"tableDelimiter": "#####",
 	"extractStrategyDetails": {"extractStrategy":"com.pdfextract.common.sample.SampleExtractorStrategy"},
+	"layoutExtractorDetails": {"layoutExtractor":"com.pdfextract.common.LapdfExtractStrategy", "additionalParameters": {"layoutRules": "CCL1.drl"}},
 	"sections":[
 		{"name": "Description"}
 	]
