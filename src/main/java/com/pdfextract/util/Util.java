@@ -23,7 +23,6 @@ import org.json.simple.parser.ParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.pdfextract.common.ExtractStrategy;
-import com.pdfextract.common.LapdfExtractStrategy;
 import com.pdfextract.common.Layout;
 import com.pdfextract.common.LayoutExtractor;
 import com.pdfextract.common.LayoutExtractorDetails;
@@ -220,7 +219,7 @@ public class Util {
 	private static List<String[]> extractData(PDDocument pdfDocument, List tables, Layout layout)
 			throws Exception {
 		System.out.println("*************************LOADING CHUNKS FROM DOCUMENT*************************");
-		LayoutExtractor layoutExtractor = new LapdfExtractStrategy();
+		LayoutExtractor layoutExtractor = (LayoutExtractor) Class.forName("com.pdfextract.common.LapdfExtractStrategy").newInstance();
 		val layoutSections = layoutExtractor.extractData(pdfDocument, layout);
 		layoutSections.forEach(chunk -> {
 			System.out.println(chunk);
